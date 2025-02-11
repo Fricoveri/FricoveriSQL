@@ -1,3 +1,7 @@
+Database with information dated between 2020 and 2021. Two main tables: CovidDeaths with info like country, continent, deaths, cases, population, etc.; and CovidVaccination with info from the vaccination process around the world. 
+The documents can be found in the following link:
+https://drive.google.com/drive/folders/1l-RhEGtR4gRoqM5igfkD7S4Jd4a7iMqU?usp=sharing
+
 -- Overall view
 SELECT location, date, total_cases, total_deaths, ROUND(total_deaths/total_cases, 2)*100 AS death_rate
 FROM CovidDeaths
