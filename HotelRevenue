@@ -3,8 +3,40 @@ dashboard in PowerBI by answering the following questions:
 Is hotel revenue growing? // Should the hotel increase the parking lot size? // What trends can be identified in the data?
 Excel Document, SQL Query and PowerBI can be found at: https://drive.google.com/drive/folders/1Vc0PBJ7OJOUO1_Hoy425gE2RbvOlx53K?usp=sharing
 
+-- Adding month number so we can sort by month name
+create table #mth
+(
+    mth_name varchar(25),
+    rank numeric
+)
+insert #mth
+select 'January', 1
+union
+select 'February', 2
+union
+select 'March', 3
+union
+select 'April', 4
+union
+select 'May', 5
+union
+select 'June', 6
+union
+select 'July', 7
+union
+select 'August', 8
+union
+select 'September', 9
+union
+select 'October', 10
+union
+select 'November', 11
+union
+select 'December', 12
+
 -- Unify the tables from the three years in a single table
-With hotels as (
+WITH hotels AS
+(
 SELECT *
 FROM dbo.['2018$']
 UNION
@@ -14,13 +46,15 @@ UNION
 SELECT *
 FROM dbo.['2020$']
 )
--- Joining Market Segment table to get the discount and Meal Costs table to get the value of meal prices
+-- Joining Market Segment table to get the discount and Meal costs table to get the value of meal prices
 SELECT *
 FROM hotels AS h
 LEFT JOIN market_segment$ AS ms
 	ON h.market_segment = ms.market_segment
 LEFT JOIN meal_cost$ AS mc
 	ON h.meal = mc.meal
+LEFT JOIN #mth AS m
+	ON h.arrival_date_month = m.mth_name
 
 -- Total Revenue per hotel, year and month
 With hotels as (
@@ -34,8 +68,11 @@ SELECT *
 FROM dbo.['2020$']
 )
 SELECT hotel, arrival_date_year, arrival_date_month, ROUND(SUM((stays_in_week_nights+stays_in_weekend_nights)*adr),2) AS Revenue
-FROM hotels
-GROUP BY hotel, arrival_date_year, arrival_date_month
+FROM hotels AS h
+LEFT JOIN #mth AS m
+	ON h.arrival_date_month = m.mth_name
+GROUP BY hotel, arrival_date_year, arrival_date_month, m.rank
+ORDER BY h.hotel, h.arrival_date_year, m.rank
 
 -- Parking Spots Used
 With hotels as (
@@ -51,7 +88,6 @@ FROM dbo.['2020$']
 SELECT hotel, arrival_date_year, arrival_date_month, arrival_date_day_of_month, SUM(required_car_parking_spaces) AS Parking_Spots_Used
 FROM hotels
 GROUP BY hotel, arrival_date_year, arrival_date_month, arrival_date_day_of_month
-
 
 -- Average stay per customer type in each hotel
 WITH hotels AS
@@ -81,6 +117,9 @@ UNION
 SELECT *
 FROM dbo.['2020$']
 )
-SELECT h.arrival_date_year, h.hotel, h.customer_type, SUM(is_repeated_guest) AS repeated_guests
+SELECT h.arrival_date_year, h.arrival_date_month, h.customer_type, SUM(is_repeated_guest) AS repeated_guests
 FROM hotels AS h
-GROUP BY h.arrival_date_year, h.hotel, h.customer_type
+LEFT JOIN #mth AS m
+	ON h.arrival_date_month = m.mth_name
+GROUP BY h.arrival_date_year, h.customer_type, h.arrival_date_month, m.rank
+ORDER BY h.customer_type, h.arrival_date_year, m.rank
