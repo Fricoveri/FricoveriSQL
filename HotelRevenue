@@ -51,3 +51,36 @@ FROM dbo.['2020$']
 SELECT hotel, arrival_date_year, arrival_date_month, arrival_date_day_of_month, SUM(required_car_parking_spaces) AS Parking_Spots_Used
 FROM hotels
 GROUP BY hotel, arrival_date_year, arrival_date_month, arrival_date_day_of_month
+
+
+-- Average stay per customer type in each hotel
+WITH hotels AS
+(
+SELECT *
+FROM dbo.['2018$']
+UNION
+SELECT *
+FROM dbo.['2019$']
+UNION
+SELECT *
+FROM dbo.['2020$']
+)
+SELECT h.hotel, h.customer_type, ROUND(AVG(h.stays_in_weekend_nights),0) AS wknd_nights, ROUND(AVG(stays_in_week_nights),0) AS week_nights
+FROM hotels AS h
+GROUP BY h.hotel, h.customer_type
+
+-- Most loyal customer type
+WITH hotels AS
+(
+SELECT *
+FROM dbo.['2018$']
+UNION
+SELECT *
+FROM dbo.['2019$']
+UNION
+SELECT *
+FROM dbo.['2020$']
+)
+SELECT h.arrival_date_year, h.hotel, h.customer_type, SUM(is_repeated_guest) AS repeated_guests
+FROM hotels AS h
+GROUP BY h.arrival_date_year, h.hotel, h.customer_type
