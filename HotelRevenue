@@ -123,3 +123,27 @@ LEFT JOIN #mth AS m
 	ON h.arrival_date_month = m.mth_name
 GROUP BY h.arrival_date_year, h.customer_type, h.arrival_date_month, m.rank
 ORDER BY h.customer_type, h.arrival_date_year, m.rank
+
+--Total Arrivals per day and AVG 7 day arrivals
+WITH hotels AS
+(
+SELECT *
+FROM dbo.['2018$']
+UNION
+SELECT *
+FROM dbo.['2019$']
+UNION
+SELECT *
+FROM dbo.['2020$']
+),
+Arrivals_count AS 
+(
+SELECT CAST(CONCAT(h.arrival_date_day_of_month,'-',m.rank,'-', arrival_date_year) AS DATE) AS arrival_date, COUNT(*) AS Total_Arrivals
+FROM hotels AS h
+LEFT JOIN #mth AS m
+	ON h.arrival_date_month = m.mth_name
+GROUP BY CAST(CONCAT(h.arrival_date_day_of_month,'-',m.rank,'-', arrival_date_year) AS DATE)
+)
+SELECT arrival_date, Total_Arrivals AS daily_arrivals, AVG(Total_Arrivals) OVER (ORDER BY arrival_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS rolling_7_day_avg
+FROM Arrivals_count
+ORDER BY arrival_date
